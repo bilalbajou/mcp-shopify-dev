@@ -59,24 +59,30 @@ const server = new McpServer({
   description: "Custom Shopify MCP Server",
 });
 
+// Strips absolute file paths and Node internals from error messages before
+// returning them to the MCP client, so internal project structure is not leaked.
+function sanitizeError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return message
+    .replace(/[A-Za-z]:[/\\][^\s,)]+/g, "<path>")       // Windows absolute paths
+    .replace(/\/(?:[\w.-]+\/)+[^\s,)]*/g, "<path>")      // Unix absolute paths
+    .replace(/file:\/\/[^\s,)]*/g, "<path>")              // file:// URLs
+    .replace(/node:[^\s,)]*/g, "<node_internal>");        // Node.js internal refs
+}
+
 // 3. Dynamically register all tools from the registry
 for (const tool of tools) {
-  // Initialize the tool with the GraphQL client if it needs it 
-  // (All ported reference tools require this)
   if (tool.initialize) {
     tool.initialize(shopifyClient);
   }
 
-  server.tool(
+  server.registerTool(
     tool.name,
-    tool.schema.shape,
+    { description: tool.description, inputSchema: tool.schema.shape },
     async (args: any) => {
       try {
-        // Here you pass the required input to the tool. 
-        // In a more advanced setup, you'd also pass `shopifyClient` so the tool can query Shopify.
-        // E.g., const result = await tool.execute(args, shopifyClient);
         const result = await tool.execute(args);
-        
+
         // If the tool natively formats its own MCP complex content block (like images!), pass it directly.
         if (result && Array.isArray(result.content)) {
           return { content: result.content };
@@ -86,9 +92,9 @@ for (const tool of tools) {
         return {
           content: [{ type: "text" as const, text: JSON.stringify(result) }],
         };
-      } catch (error: any) {
+      } catch (error) {
         return {
-          content: [{ type: "text" as const, text: `Tool Execution Failed: ${error.message}` }],
+          content: [{ type: "text" as const, text: `Tool Execution Failed: ${sanitizeError(error)}` }],
           isError: true,
         };
       }
