@@ -16,10 +16,12 @@
     "@modelcontextprotocol/sdk": "^1.28.0",
     "dotenv": "^17.3.1",
     "graphql-request": "^7.4.0",
+    "sharp": "^0.34.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "@types/sharp": "^0.31.1",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   }

@@ -23,6 +23,11 @@ import { getInventoryLevels } from "./getInventoryLevels.js";
 // Custom Media
 import { updateProductMedia } from "./updateProductMedia.js";
 import { deleteProductMedia } from "./deleteProductMedia.js";
+import { compressProductMedia } from "./compressProductMedia.js";
+
+// Files (theme & general media)
+import { getFiles } from "./getFiles.js";
+import { updateFile } from "./updateFile.js";
 
 // AI Generative Tools
 import { generateAltTextAi } from "./generateAltTextAi.js";
@@ -54,6 +59,11 @@ export const tools: ShopifyTool[] = [
   // Custom Media
   updateProductMedia,
   deleteProductMedia,
+  compressProductMedia,
+
+  // Files (theme & general media)
+  getFiles,
+  updateFile,
   
   // AI Tools
   generateAltTextAi
