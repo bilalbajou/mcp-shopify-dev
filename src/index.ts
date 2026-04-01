@@ -6,46 +6,52 @@ import { GraphQLClient } from "graphql-request";
 
 import { tools } from "./tools/registry.js";
 
-// Load environment variables from .env if present
+// Load .env file if present (local development fallback)
 dotenv.config();
 
-// Authentication Keys (Shopify Custom App API Key and Secret Key, and Store Domain)
-// NOTE: For Shopify Admin API via custom apps, you usually use the Admin API access token (shpat_...). 
-// If your authentication specifically requires sending the API key and secret, you would handle the auth flow here.
-// For standard GraphQL access, an Admin Access Token is passed in headers. 
-const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // e.g., your-store.myshopify.com
+// Parse CLI flags: --domain, --api-key, --secret-key, --api-version
+// CLI args take priority over environment variables.
+function parseArgs(argv: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (let i = 0; i < argv.length - 1; i++) {
+    if (argv[i].startsWith("--")) {
+      const key = argv[i].slice(2);
+      const value = argv[i + 1];
+      if (!value.startsWith("--")) {
+        result[key] = value;
+        i++;
+      }
+    }
+  }
+  return result;
+}
 
-// Allow modern Admin Access Tokens, OR traditional API Key + Secret Key combos
-const SHOPIFY_ADMIN_ACCESS_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
-const SHOPIFY_API_KEY = process.env.SHOPIFY_API_KEY;
-const SHOPIFY_SECRET_KEY = process.env.SHOPIFY_SECRET_KEY;
+const args = parseArgs(process.argv.slice(2));
+
+const SHOPIFY_STORE_DOMAIN = args["domain"]      || process.env.SHOPIFY_STORE_DOMAIN;
+const SHOPIFY_API_KEY      = args["api-key"]     || process.env.SHOPIFY_API_KEY;
+const SHOPIFY_SECRET_KEY   = args["secret-key"]  || process.env.SHOPIFY_SECRET_KEY;
 
 if (!SHOPIFY_STORE_DOMAIN) {
-  console.error("Critical Error: SHOPIFY_STORE_DOMAIN must be provided via environment variables.");
+  console.error("Error: --domain is required (e.g. --domain your-store.myshopify.com)");
+  console.error("       or set SHOPIFY_STORE_DOMAIN as an environment variable.");
   process.exit(1);
 }
 
-if (!SHOPIFY_ADMIN_ACCESS_TOKEN && (!SHOPIFY_API_KEY || !SHOPIFY_SECRET_KEY)) {
-  console.error("Critical Error: You must provide either SHOPIFY_ADMIN_ACCESS_TOKEN, or both SHOPIFY_API_KEY and SHOPIFY_SECRET_KEY.");
+if (!SHOPIFY_API_KEY || !SHOPIFY_SECRET_KEY) {
+  console.error("Error: --api-key and --secret-key are both required.");
+  console.error("       or set SHOPIFY_API_KEY and SHOPIFY_SECRET_KEY as environment variables.");
   process.exit(1);
 }
 
 // 1. Initialize GraphQL Client
-const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-01";
+const API_VERSION = args["api-version"] || process.env.SHOPIFY_API_VERSION || "2026-01";
 
-// Safely generate the correct headers based on what keys the user provided
+const credentials = Buffer.from(`${SHOPIFY_API_KEY}:${SHOPIFY_SECRET_KEY}`).toString("base64");
 const headers: Record<string, string> = {
   "Content-Type": "application/json",
+  "Authorization": `Basic ${credentials}`,
 };
-
-if (SHOPIFY_API_KEY && SHOPIFY_SECRET_KEY) {
-  // Use Basic Auth for traditional Private Apps
-  const credentials = Buffer.from(`${SHOPIFY_API_KEY}:${SHOPIFY_SECRET_KEY}`).toString("base64");
-  headers["Authorization"] = `Basic ${credentials}`;
-} else if (SHOPIFY_ADMIN_ACCESS_TOKEN) {
-  // Use X-Shopify-Access-Token for Custom Apps
-  headers["X-Shopify-Access-Token"] = SHOPIFY_ADMIN_ACCESS_TOKEN;
-}
 
 const shopifyClient = new GraphQLClient(
   `https://${SHOPIFY_STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`,
