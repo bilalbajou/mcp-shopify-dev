@@ -132,11 +132,37 @@ claude mcp list
 
 ### 3. Use it
 
-In Claude Code, you can now say:
+Once registered, just talk to Claude naturally. Here are example prompts by scope:
 
-> "Use shopify-dev to list all my products"
-> "Use shopify-dev to create a new product called 'Summer Tee' for $29.99"
+**Products**
+> "Use shopify-dev to list all my active products"
+> "Use shopify-dev to create a new product called 'Summer Tee' with sizes S, M, L at $29.99"
+> "Use shopify-dev to update the description and tags of product ID 12345"
+> "Use shopify-dev to add a new variant 'XL / Black' at $34.99 to product ID 12345"
+> "Use shopify-dev to delete all draft products older than 30 days"
+
+**Collections**
+> "Use shopify-dev to list all my collections"
+> "Use shopify-dev to get collection ID 67890 and show me all its products"
+
+**Inventory**
+> "Use shopify-dev to check stock levels for all products at my main location"
+> "Use shopify-dev to set the inventory of product ID 12345 to 50 units at location ID 99"
+> "Use shopify-dev to find all products with 0 inventory"
+
+**Media**
 > "Use shopify-dev to compress all images on product ID 12345 and replace the originals"
+> "Use shopify-dev to delete all media from product ID 12345 except the first image"
+> "Use shopify-dev to update the alt text on image ID 67 to 'White cotton summer t-shirt'"
+
+**Files**
+> "Use shopify-dev to list all files in my Shopify Files section"
+> "Use shopify-dev to rename file ID 88 to 'banner-summer-2026'"
+> "Use shopify-dev to update the alt text of file ID 88 to 'Summer 2026 banner'"
+
+**AI — Alt Text Generation**
+> "Use shopify-dev to get my first product, grab its first image URL, generate SEO alt text with AI, then save it back to the store"
+> "Use shopify-dev to generate alt text for this image URL: https://cdn.shopify.com/..."
 
 ---
 
