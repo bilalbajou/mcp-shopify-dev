@@ -11,8 +11,8 @@ Manage your entire store through natural language — products, inventory, colle
 ```bash
 claude mcp add shopify-dev npx mcp-shopify-dev \
   --domain your-store.myshopify.com \
-  --api-key YOUR_API_KEY \
-  --secret-key YOUR_SECRET_KEY
+  --access-token YOUR_ACCESS_TOKEN
+  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
 ```
 
 That's it. No install, no build step — just run it with `npx`.
@@ -120,8 +120,8 @@ Install the app and copy your **API key** and **API secret key**.
 ```bash
 claude mcp add shopify-dev npx mcp-shopify-dev \
   --domain your-store.myshopify.com \
-  --api-key YOUR_API_KEY \
-  --secret-key YOUR_SECRET_KEY
+  --access-token YOUR_ACCESS_TOKEN
+  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
 ```
 
 Verify registration:
@@ -184,8 +184,8 @@ Run locally from the project directory:
 ```bash
 claude mcp add shopify-dev node "./dist/index.js" \
   --domain your-store.myshopify.com \
-  --api-key YOUR_KEY \
-  --secret-key YOUR_SECRET
+  --access-token YOUR_ACCESS_TOKEN
+  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
 ```
 
 ### Commands
@@ -203,8 +203,8 @@ A visual UI for calling tools directly — no LLM needed:
 ```bash
 npx @modelcontextprotocol/inspector node "./dist/index.js" \
   --domain your-store.myshopify.com \
-  --api-key YOUR_KEY \
-  --secret-key YOUR_SECRET
+  --access-token YOUR_ACCESS_TOKEN
+  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
 ```
 
 Opens at `http://localhost:5173` — select any tool, fill in inputs, and inspect raw JSON responses.
@@ -261,8 +261,8 @@ Then import and add it to the `tools` array in `src/tools/registry.ts`.
 
 ## Troubleshooting
 
-**"--api-key and --secret-key are both required"**
-Pass them as CLI flags or set `SHOPIFY_API_KEY` / `SHOPIFY_SECRET_KEY` in your environment.
+**"You must provide either an Access Token... OR both an API Key and Secret Key"**
+Pass `--access-token` (or `--api-key` and `--secret-key`) as CLI flags, or set `SHOPIFY_ADMIN_ACCESS_TOKEN` (or `SHOPIFY_API_KEY` / `SHOPIFY_SECRET_KEY`) in your environment.
 
 **MCP server connects but tools return nothing**
 Run `npm run build` again after making changes — the server runs from `dist/`.

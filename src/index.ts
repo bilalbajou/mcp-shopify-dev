@@ -31,6 +31,7 @@ const args = parseArgs(process.argv.slice(2));
 const SHOPIFY_STORE_DOMAIN = args["domain"]      || process.env.SHOPIFY_STORE_DOMAIN;
 const SHOPIFY_API_KEY      = args["api-key"]     || process.env.SHOPIFY_API_KEY;
 const SHOPIFY_SECRET_KEY   = args["secret-key"]  || process.env.SHOPIFY_SECRET_KEY;
+const SHOPIFY_ACCESS_TOKEN = args["access-token"] || process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
 if (!SHOPIFY_STORE_DOMAIN) {
   console.error("Error: --domain is required (e.g. --domain your-store.myshopify.com)");
@@ -38,20 +39,28 @@ if (!SHOPIFY_STORE_DOMAIN) {
   process.exit(1);
 }
 
-if (!SHOPIFY_API_KEY || !SHOPIFY_SECRET_KEY) {
-  console.error("Error: --api-key and --secret-key are both required.");
-  console.error("       or set SHOPIFY_API_KEY and SHOPIFY_SECRET_KEY as environment variables.");
+const hasBasicAuth = SHOPIFY_API_KEY && SHOPIFY_SECRET_KEY;
+const hasAccessToken = !!SHOPIFY_ACCESS_TOKEN;
+
+if (!hasBasicAuth && !hasAccessToken) {
+  console.error("Error: You must provide either an Access Token (--access-token) OR both an API Key and Secret Key (--api-key and --secret-key).");
+  console.error("       Alternatively, set SHOPIFY_ADMIN_ACCESS_TOKEN or SHOPIFY_API_KEY/SHOPIFY_SECRET_KEY as environment variables.");
   process.exit(1);
 }
 
 // 1. Initialize GraphQL Client
 const API_VERSION = args["api-version"] || process.env.SHOPIFY_API_VERSION || "2026-01";
 
-const credentials = Buffer.from(`${SHOPIFY_API_KEY}:${SHOPIFY_SECRET_KEY}`).toString("base64");
 const headers: Record<string, string> = {
   "Content-Type": "application/json",
-  "Authorization": `Basic ${credentials}`,
 };
+
+if (hasAccessToken) {
+  headers["X-Shopify-Access-Token"] = SHOPIFY_ACCESS_TOKEN;
+} else if (hasBasicAuth) {
+  const credentials = Buffer.from(`${SHOPIFY_API_KEY}:${SHOPIFY_SECRET_KEY}`).toString("base64");
+  headers["Authorization"] = `Basic ${credentials}`;
+}
 
 const shopifyClient = new GraphQLClient(
   `https://${SHOPIFY_STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`,
