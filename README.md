@@ -9,13 +9,15 @@ Manage your entire store through natural language — products, inventory, colle
 ## Quick Start
 
 ```bash
-claude mcp add shopify-dev npx mcp-shopify-dev \
-  --domain your-store.myshopify.com \
-  --access-token YOUR_ACCESS_TOKEN
-  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
+claude mcp add shopify-dev \
+  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
+  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  npx -y mcp-shopify-dev
 ```
 
 That's it. No install, no build step — just run it with `npx`.
+
+> **Why `-e` flags?** Passing secrets via `-e` stores them in Claude's MCP config rather than exposing them in your shell history or process list.
 
 ---
 
@@ -167,10 +169,20 @@ Install the app and copy your **API key** and **API secret key**.
 ### 2. Register with Claude Code
 
 ```bash
-claude mcp add shopify-dev npx mcp-shopify-dev \
-  --domain your-store.myshopify.com \
-  --access-token YOUR_ACCESS_TOKEN
-  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
+claude mcp add shopify-dev \
+  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
+  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  npx -y mcp-shopify-dev
+```
+
+If you use API key + secret instead of an access token:
+
+```bash
+claude mcp add shopify-dev \
+  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
+  -e SHOPIFY_API_KEY=your_api_key \
+  -e SHOPIFY_SECRET_KEY=your_secret_key \
+  npx -y mcp-shopify-dev
 ```
 
 Verify registration:
@@ -250,10 +262,10 @@ npm run build
 Run locally from the project directory:
 
 ```bash
-claude mcp add shopify-dev node "./dist/index.js" \
-  --domain your-store.myshopify.com \
-  --access-token YOUR_ACCESS_TOKEN
-  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
+claude mcp add shopify-dev \
+  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
+  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  node "./dist/index.js"
 ```
 
 ### Commands
@@ -269,10 +281,9 @@ npm start        # run compiled output from dist/
 A visual UI for calling tools directly — no LLM needed:
 
 ```bash
-npx @modelcontextprotocol/inspector node "./dist/index.js" \
-  --domain your-store.myshopify.com \
-  --access-token YOUR_ACCESS_TOKEN
-  # OR use --api-key YOUR_API_KEY --secret-key YOUR_SECRET_KEY
+SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
+SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+npx @modelcontextprotocol/inspector node "./dist/index.js"
 ```
 
 Opens at `http://localhost:5173` — select any tool, fill in inputs, and inspect raw JSON responses.

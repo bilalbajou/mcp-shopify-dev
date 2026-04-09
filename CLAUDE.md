@@ -13,8 +13,13 @@ npm start          # Run compiled output from dist/
 
 There are no test scripts. Use the MCP registration command to verify a working build:
 ```bash
-claude mcp add shopify-dev "node" "./dist/index.js"
+claude mcp add shopify-dev \
+  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
+  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  node "./dist/index.js"
 ```
+
+> Use `-e` flags to pass secrets — they are stored in Claude's MCP config and never exposed in shell history or process lists. Do not pass secrets as CLI `--flags` on the command itself.
 
 ## Architecture
 
