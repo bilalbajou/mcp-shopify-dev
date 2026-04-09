@@ -25,8 +25,12 @@ That's it. No install, no build step — just run it with `npx`.
 |---|---|---|
 | **Products** | 8 | Create, read, update, delete products; manage variants and options |
 | **Collections** | 2 | List all collections; fetch a single collection with its products |
+| **Discounts & Price Rules** | 6 | Create, read, update, deactivate discounts and check usage |
+| **Analytics & Reports** | 5 | Retrieve shop info, sales reports, top-selling products, inventory reports, and overall dashboard |
+| **Orders** | 5 | Fetch, update, and cancel orders; create fulfillments |
 | **Inventory** | 3 | Get inventory items and levels by location; set stock quantities |
 | **Media** | 3 | Update/delete product media; compress images |
+| **Themes** | 5 | List themes, explore theme files, view code, update assets, and generate Liquid sections |
 | **Files** | 2 | Browse Shopify Files section; rename files or update alt text |
 | **AI** | 1 | Generate SEO alt text for product images using Claude's vision |
 
@@ -54,6 +58,37 @@ That's it. No install, no build step — just run it with `npx`.
 | `get-collections` | List all collections with pagination |
 | `get-collection-by-id` | Fetch a single collection and its products |
 
+### Discounts & Price Rules
+
+| Tool | Description |
+|---|---|
+| `get-discount-codes` | List active discount codes with their status, usage limits, and summarized rules. |
+| `create-discount-code` | Create a promo code (percentage, fixed amount, free shipping). |
+| `update-discount-code` | Update an existing discount code's basic settings (title, dates, usage limit). |
+| `deactivate-discount` | Deactivate an active discount code or automatic discount. |
+| `create-automatic-discount` | Create an automatic discount (percentage or fixed amount). |
+| `get-discount-usage` | Check how many times a code/discount has been used. |
+
+### Analytics & Reports
+
+| Tool | Description |
+|---|---|
+| `get-shop-info` | Get general information about the store: name, plan, currency, timezone, etc. |
+| `get-sales-report` | Generate a sales report for a date range (revenue, order count, AOV, tax, shipping). |
+| `get-top-products` | Rank products by revenue or units sold for a given date range. |
+| `get-inventory-report` | Store-wide low stock and out-of-stock report across all product variants. |
+| `get-analytics-dashboard` | KPI overview: current vs. prior period revenue, AOV, growth, unfulfilled orders, and low stock count. |
+
+### Orders
+
+| Tool | Description |
+|---|---|
+| `get-orders` | List orders with advanced filtering by status, date range, customer email, or tags. |
+| `get-order-by-id` | Get full details for a single order by its ID, including line items and fulfillments. |
+| `update-order` | Update an order's tags, internal note, customer email, shipping address, or custom attributes. |
+| `cancel-order` | Cancel an order. Requires a reason, and options for refund and restock. |
+| `create-fulfillment` | Fulfill an order (or specific line items) by fulfillment order ID. |
+
 ### Inventory
 
 | Tool | Description |
@@ -69,6 +104,16 @@ That's it. No install, no build step — just run it with `npx`.
 | `update-product-media` | Update alt text on a product image |
 | `delete-product-media` | Remove unused or old media from a product |
 | `compress-product-media` | Compress product images, re-upload, and optionally replace the original — returns a file size savings report |
+
+### Themes
+
+| Tool | Description |
+|---|---|
+| `get-themes` | List all themes in the store, including their IDs and roles (MAIN, DEVELOPMENT). |
+| `get-theme-files` | List files in a theme, optionally filtered by a prefix. |
+| `get-theme-file-content` | Read the full source code (Liquid, JSON, CSS, JS) of a single theme file. |
+| `upsert-theme-file` | Create or overwrite a file in a Shopify theme (Liquid, snippet, CSS, JSON). |
+| `generate-liquid-section` | Generate a complete, ready-to-upload Shopify Liquid section file from a structured spec. |
 
 ### Files
 
@@ -110,7 +155,11 @@ Grant the following API scopes under **Configuration**:
 | Scope | Used by |
 |---|---|
 | `read_products`, `write_products` | All product, variant, and media tools |
+| `read_orders`, `write_orders` | Orders, fulfillments, and sales reports tools |
+| `read_themes`, `write_themes` | Theme files and section generation tools |
+| `read_discounts`, `write_discounts` | Discounts and price rules tools |
 | `read_inventory`, `write_inventory` | Inventory tools |
+| `read_analytics` | Analytics dashboard and reports |
 | `read_files`, `write_files` | `get-files`, `update-file` |
 
 Install the app and copy your **API key** and **API secret key**.
@@ -145,6 +194,19 @@ Once registered, just talk to Claude naturally. Here are example prompts by scop
 > "Use shopify-dev to list all my collections"
 > "Use shopify-dev to get collection ID 67890 and show me all its products"
 
+**Analytics & Reports**
+> "Use shopify-dev to show me the analytics dashboard for this week vs last week"
+> "Use shopify-dev to give me a sales report for the last 30 days grouped by day"
+> "Use shopify-dev to find my top 10 best selling products this month"
+> "Use shopify-dev to run an inventory report and show me everything low in stock"
+
+**Orders**
+> "Use shopify-dev to list my last 10 unfulfilled orders"
+> "Use shopify-dev to get order ID 12345"
+> "Use shopify-dev to add a tag 'Vip' and an internal note to order ID 12345"
+> "Use shopify-dev to cancel order ID 12345 and refund the customer"
+> "Use shopify-dev to fulfill order ID 12345 and add FedEx tracking number '1Z99999'"
+
 **Inventory**
 > "Use shopify-dev to check stock levels for all products at my main location"
 > "Use shopify-dev to set the inventory of product ID 12345 to 50 units at location ID 99"
@@ -154,6 +216,12 @@ Once registered, just talk to Claude naturally. Here are example prompts by scop
 > "Use shopify-dev to compress all images on product ID 12345 and replace the originals"
 > "Use shopify-dev to delete all media from product ID 12345 except the first image"
 > "Use shopify-dev to update the alt text on image ID 67 to 'White cotton summer t-shirt'"
+
+**Themes**
+> "Use shopify-dev to list all themes"
+> "Use shopify-dev to find all files in the 'sections' directory of my main theme"
+> "Use shopify-dev to read the content of layout/theme.liquid"
+> "Use shopify-dev to generate a new FAQ Liquid section and upload it to my development theme"
 
 **Files**
 > "Use shopify-dev to list all files in my Shopify Files section"

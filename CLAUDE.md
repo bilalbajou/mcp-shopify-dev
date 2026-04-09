@@ -22,11 +22,11 @@ This is a **Model Context Protocol (MCP) server** that exposes Shopify Admin Gra
 
 ### Request Flow
 
-1. `src/index.ts` — Entry point. Reads env vars, creates a `GraphQLClient` pointed at `https://{SHOPIFY_STORE_DOMAIN}/admin/api/{API_VERSION}/graphql.json`, instantiates `McpServer`, then iterates `tools` from the registry. For each tool it calls `tool.initialize(shopifyClient)` (if defined) and registers the tool handler with `server.tool(...)`.
+1. `src/index.ts` — Entry point. Parses CLI flags (taking precedence over env vars), creates a `GraphQLClient` pointed at `https://{SHOPIFY_STORE_DOMAIN}/admin/api/{API_VERSION}/graphql.json`, instantiates `McpServer`, then iterates `tools` from the registry. For each tool it calls `tool.initialize(shopifyClient)` (if defined) and registers the tool handler with `server.registerTool(...)`. Errors returned to the MCP client are sanitized via `sanitizeError()` to strip internal file paths.
 2. `src/tools/registry.ts` — Single export `tools: ShopifyTool[]`. Add new tools here.
-3. `src/tools/*.ts` — Individual tool modules. Each exports a `ShopifyTool` object.
-4. `src/lib/types.ts` — The `ShopifyTool` interface and shared Shopify connection/edge types.
-5. `src/lib/toolUtils.ts` — Shared helpers: `checkUserErrors`, `handleToolError`, `edgesToNodes`, `shopMoney`.
+3. `src/tools/*.ts` — Individual tool modules. Each exports a `ShopifyTool` object. Domains covered include Products, Collections, Orders, Inventory, Themes, Analytics, Files, and Media.
+4. `src/lib/types.ts` — The `ShopifyTool` interface and shared Shopify connection/edge types (`ShopifyConnection`, `ShopifyEdge`, `ShopifyMoney`, `ShopifyUserError`). Also re-exports the utility functions.
+5. `src/lib/toolUtils.ts` — Shared helpers: `checkUserErrors`, `handleToolError`, `edgesToNodes`, `shopMoney`. Import from here in tool files.
 
 ### Adding a New Tool
 
@@ -68,6 +68,8 @@ Then import and add to the `tools` array in `src/tools/registry.ts`.
 - **Error handling**: Always use `checkUserErrors` after mutations (throws on `userErrors`), then `handleToolError` in the catch block. This prevents the double-wrapping bug where errors get prefixed with "Failed to X: Failed to X:".
 - **Module imports**: All local imports must use the `.js` extension (NodeNext module resolution).
 - **Tool result format**: Return plain objects from `execute`. The server in `index.ts` wraps them in `{ content: [{ type: "text", text: JSON.stringify(result) }] }`. Exception: if your tool returns `{ content: [...] }` directly (e.g. image content blocks for vision tools like `generateAltTextAi`), the server passes it through as-is.
+- **`initialize` is optional**: Tools that don't call the Shopify API (e.g. `exampleTool`, `generateAltTextAi`) omit `initialize`. Only include it when you need a `GraphQLClient` reference.
+- **Image processing**: `sharp` is available as a dependency (used in `compressProductMedia`) for resizing/compressing images server-side before uploading.
 
 ## Environment Variables
 
@@ -76,4 +78,6 @@ Then import and add to the `tools` array in `src/tools/registry.ts`.
 | `SHOPIFY_STORE_DOMAIN` | Yes | e.g. `your-store.myshopify.com` |
 | `SHOPIFY_ADMIN_ACCESS_TOKEN` | One of the two auth options | Modern custom app token (`shpat_...`) |
 | `SHOPIFY_API_KEY` + `SHOPIFY_SECRET_KEY` | One of the two auth options | Traditional private app Basic Auth |
-| `SHOPIFY_API_VERSION` | No | Defaults to `2024-01` |
+| `SHOPIFY_API_VERSION` | No | Defaults to `2026-01` |
+
+CLI flags mirror the env vars and take precedence: `--domain`, `--access-token`, `--api-key`, `--secret-key`, `--api-version`.
