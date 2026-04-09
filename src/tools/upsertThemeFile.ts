@@ -41,7 +41,6 @@ export const upsertThemeFile: ShopifyTool = {
             upsertedThemeFiles {
               filename
               size
-              contentType
               updatedAt
             }
             userErrors {
@@ -79,11 +78,10 @@ export const upsertThemeFile: ShopifyTool = {
         success: true,
         file: upserted
           ? {
-              filename: upserted.filename,
-              size: upserted.size,
-              contentType: upserted.contentType,
-              updatedAt: upserted.updatedAt,
-            }
+            filename: upserted.filename,
+            size: upserted.size,
+            updatedAt: upserted.updatedAt,
+          }
           : null,
         message: `File '${input.filename}' successfully written to theme ${input.themeId}.`,
       };
