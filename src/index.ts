@@ -28,10 +28,10 @@ function parseArgs(argv: string[]): Record<string, string> {
 
 const args = parseArgs(process.argv.slice(2));
 
-const SHOPIFY_STORE_DOMAIN = args["domain"]      || process.env.SHOPIFY_STORE_DOMAIN;
-const SHOPIFY_API_KEY      = args["api-key"]     || process.env.SHOPIFY_API_KEY;
-const SHOPIFY_SECRET_KEY   = args["secret-key"]  || process.env.SHOPIFY_SECRET_KEY;
-const SHOPIFY_ACCESS_TOKEN = args["access-token"] || process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+const SHOPIFY_STORE_DOMAIN = args["domain"]      || process.env.SHOPIFY_STORE_DOMAIN || process.env.SHOPIFY_SHOP;
+const SHOPIFY_API_KEY      = args["api-key"]     || process.env.SHOPIFY_API_KEY || process.env.SHOPIFY_CLIENT_ID;
+const SHOPIFY_SECRET_KEY   = args["secret-key"]  || process.env.SHOPIFY_SECRET_KEY || process.env.SHOPIFY_CLIENT_SECRET;
+const SHOPIFY_ACCESS_TOKEN = args["access-token"] || process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || process.env.SHOPIFY_ACCESS_TOKEN;
 
 if (!SHOPIFY_STORE_DOMAIN) {
   console.error("Error: --domain is required (e.g. --domain your-store.myshopify.com)");
@@ -39,32 +39,69 @@ if (!SHOPIFY_STORE_DOMAIN) {
   process.exit(1);
 }
 
-const hasBasicAuth = SHOPIFY_API_KEY && SHOPIFY_SECRET_KEY;
+const hasClientIdSecret = SHOPIFY_API_KEY && SHOPIFY_SECRET_KEY;
 const hasAccessToken = !!SHOPIFY_ACCESS_TOKEN;
 
-if (!hasBasicAuth && !hasAccessToken) {
+if (!hasClientIdSecret && !hasAccessToken) {
   console.error("Error: You must provide either an Access Token (--access-token) OR both an API Key and Secret Key (--api-key and --secret-key).");
-  console.error("       Alternatively, set SHOPIFY_ADMIN_ACCESS_TOKEN or SHOPIFY_API_KEY/SHOPIFY_SECRET_KEY as environment variables.");
+  console.error("       Alternatively, set SHOPIFY_ACCESS_TOKEN or SHOPIFY_CLIENT_ID/SHOPIFY_CLIENT_SECRET as environment variables.");
   process.exit(1);
 }
+
+// Ensure the domain has no protocol (e.g., store.myshopify.com)
+const cleanDomain = SHOPIFY_STORE_DOMAIN.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 // 1. Initialize GraphQL Client
 const API_VERSION = args["api-version"] || process.env.SHOPIFY_API_VERSION || "2026-01";
 
-const headers: Record<string, string> = {
-  "Content-Type": "application/json",
-};
+let cachedToken: string | null = hasAccessToken ? SHOPIFY_ACCESS_TOKEN : null;
+let tokenExpiresAt = 0;
 
-if (hasAccessToken) {
-  headers["X-Shopify-Access-Token"] = SHOPIFY_ACCESS_TOKEN;
-} else if (hasBasicAuth) {
-  const credentials = Buffer.from(`${SHOPIFY_API_KEY}:${SHOPIFY_SECRET_KEY}`).toString("base64");
-  headers["Authorization"] = `Basic ${credentials}`;
+async function getAccessToken(): Promise<string> {
+  // If we have a static token, or a dynamically fetched token that is still valid
+  if (cachedToken && (hasAccessToken || Date.now() < tokenExpiresAt - 60_000)) {
+    return cachedToken;
+  }
+
+  // Fetch token using client credentials grant
+  const body = new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: SHOPIFY_API_KEY as string,
+    client_secret: SHOPIFY_SECRET_KEY as string,
+  });
+
+  const response = await fetch(
+    `https://${cleanDomain}/admin/oauth/access_token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Shopify Auth: Token request failed with status ${response.status}`);
+  }
+
+  const data = await response.json();
+  cachedToken = data.access_token;
+  tokenExpiresAt = Date.now() + (data.expires_in * 1000);
+  return cachedToken as string;
 }
 
 const shopifyClient = new GraphQLClient(
-  `https://${SHOPIFY_STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`,
-  { headers }
+  `https://${cleanDomain}/admin/api/${API_VERSION}/graphql.json`,
+  { 
+    // We override fetch to dynamically resolve the access token before sending the request
+    fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const token = await getAccessToken();
+      const headers = new Headers(init?.headers);
+      headers.set("Content-Type", "application/json");
+      headers.set("X-Shopify-Access-Token", token);
+      
+      return fetch(input, { ...init, headers });
+    }
+  }
 );
 
 // 2. Set up the core MCP server

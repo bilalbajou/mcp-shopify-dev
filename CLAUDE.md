@@ -14,8 +14,9 @@ npm start          # Run compiled output from dist/
 There are no test scripts. Use the MCP registration command to verify a working build:
 ```bash
 claude mcp add shopify-dev \
-  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
-  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  -e SHOPIFY_SHOP=your-store-name \
+  -e SHOPIFY_CLIENT_ID=your_client_id \
+  -e SHOPIFY_CLIENT_SECRET=your_client_secret \
   node "./dist/index.js"
 ```
 
@@ -27,7 +28,7 @@ This is a **Model Context Protocol (MCP) server** that exposes Shopify Admin Gra
 
 ### Request Flow
 
-1. `src/index.ts` — Entry point. Parses CLI flags (taking precedence over env vars), creates a `GraphQLClient` pointed at `https://{SHOPIFY_STORE_DOMAIN}/admin/api/{API_VERSION}/graphql.json`, instantiates `McpServer`, then iterates `tools` from the registry. For each tool it calls `tool.initialize(shopifyClient)` (if defined) and registers the tool handler with `server.registerTool(...)`. Errors returned to the MCP client are sanitized via `sanitizeError()` to strip internal file paths.
+1. `src/index.ts` — Entry point. Parses CLI flags (taking precedence over env vars), creates a `GraphQLClient` pointed at `https://{SHOPIFY_SHOP_OR_DOMAIN}/admin/api/{API_VERSION}/graphql.json` which uses a dynamic fetch method to obtain an access token via client credentials grant (or uses a static token if provided), instantiates `McpServer`, then iterates `tools` from the registry. For each tool it calls `tool.initialize(shopifyClient)` (if defined) and registers the tool handler with `server.registerTool(...)`. Errors returned to the MCP client are sanitized via `sanitizeError()` to strip internal file paths.
 2. `src/tools/registry.ts` — Single export `tools: ShopifyTool[]`. Add new tools here.
 3. `src/tools/*.ts` — Individual tool modules. Each exports a `ShopifyTool` object. Domains covered include Products, Collections, Orders, Inventory, Themes, Analytics, Files, and Media.
 4. `src/lib/types.ts` — The `ShopifyTool` interface and shared Shopify connection/edge types (`ShopifyConnection`, `ShopifyEdge`, `ShopifyMoney`, `ShopifyUserError`). Also re-exports the utility functions.
@@ -80,9 +81,9 @@ Then import and add to the `tools` array in `src/tools/registry.ts`.
 
 | Variable | Required | Description |
 |---|---|---|
-| `SHOPIFY_STORE_DOMAIN` | Yes | e.g. `your-store.myshopify.com` |
-| `SHOPIFY_ADMIN_ACCESS_TOKEN` | One of the two auth options | Modern custom app token (`shpat_...`) |
-| `SHOPIFY_API_KEY` + `SHOPIFY_SECRET_KEY` | One of the two auth options | Traditional private app Basic Auth |
+| `SHOPIFY_SHOP` (or `SHOPIFY_STORE_DOMAIN`) | Yes | e.g. `your-store-name` or `your-store.myshopify.com` |
+| `SHOPIFY_CLIENT_ID` + `SHOPIFY_CLIENT_SECRET` | One of the two auth options | Dev Dashboard App Client Credentials Grant |
+| `SHOPIFY_ACCESS_TOKEN` | One of the two auth options | Static Custom App token (`shpat_...`) |
 | `SHOPIFY_API_VERSION` | No | Defaults to `2026-01` |
 
-CLI flags mirror the env vars and take precedence: `--domain`, `--access-token`, `--api-key`, `--secret-key`, `--api-version`.
+CLI flags mirror the env vars and take precedence: `--domain`, `--access-token`, `--api-key` (maps to `CLIENT_ID`), `--secret-key` (maps to `CLIENT_SECRET`), `--api-version`.

@@ -10,8 +10,9 @@ Manage your entire store through natural language — products, inventory, colle
 
 ```bash
 claude mcp add shopify-dev \
-  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
-  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  -e SHOPIFY_SHOP=your-store-name \
+  -e SHOPIFY_CLIENT_ID=your_client_id \
+  -e SHOPIFY_CLIENT_SECRET=your_client_secret \
   npx -y mcp-shopify-dev
 ```
 
@@ -170,18 +171,18 @@ Install the app and copy your **API key** and **API secret key**.
 
 ```bash
 claude mcp add shopify-dev \
-  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
-  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  -e SHOPIFY_SHOP=your-store-name \
+  -e SHOPIFY_CLIENT_ID=your_client_id \
+  -e SHOPIFY_CLIENT_SECRET=your_client_secret \
   npx -y mcp-shopify-dev
 ```
 
-If you use API key + secret instead of an access token:
+If you use a static access token instead of a client credentials grant:
 
 ```bash
 claude mcp add shopify-dev \
   -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
-  -e SHOPIFY_API_KEY=your_api_key \
-  -e SHOPIFY_SECRET_KEY=your_secret_key \
+  -e SHOPIFY_ACCESS_TOKEN=shpat_... \
   npx -y mcp-shopify-dev
 ```
 
@@ -263,8 +264,9 @@ Run locally from the project directory:
 
 ```bash
 claude mcp add shopify-dev \
-  -e SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
-  -e SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+  -e SHOPIFY_SHOP=your-store-name \
+  -e SHOPIFY_CLIENT_ID=your_client_id \
+  -e SHOPIFY_CLIENT_SECRET=your_client_secret \
   node "./dist/index.js"
 ```
 
@@ -281,8 +283,9 @@ npm start        # run compiled output from dist/
 A visual UI for calling tools directly — no LLM needed:
 
 ```bash
-SHOPIFY_STORE_DOMAIN=your-store.myshopify.com \
-SHOPIFY_ADMIN_ACCESS_TOKEN=shpat_... \
+SHOPIFY_SHOP=your-store-name \
+SHOPIFY_CLIENT_ID=your_client_id \
+SHOPIFY_CLIENT_SECRET=your_client_secret \
 npx @modelcontextprotocol/inspector node "./dist/index.js"
 ```
 
@@ -340,8 +343,8 @@ Then import and add it to the `tools` array in `src/tools/registry.ts`.
 
 ## Troubleshooting
 
-**"You must provide either an Access Token... OR both an API Key and Secret Key"**
-Pass `--access-token` (or `--api-key` and `--secret-key`) as CLI flags, or set `SHOPIFY_ADMIN_ACCESS_TOKEN` (or `SHOPIFY_API_KEY` / `SHOPIFY_SECRET_KEY`) in your environment.
+**"You must provide either an Access Token... OR both a Client ID and Secret"**
+Pass `--access-token` (or `--api-key` and `--secret-key`) as CLI flags, or set `SHOPIFY_CLIENT_ID` and `SHOPIFY_CLIENT_SECRET` (or `SHOPIFY_ACCESS_TOKEN`) in your environment.
 
 **MCP server connects but tools return nothing**
 Run `npm run build` again after making changes — the server runs from `dist/`.
